@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "104787327077",
+    "project_id": "roboserve-fd298",
+    "storage_bucket": "roboserve-fd298.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104787327077:android:d92f817edfbf7bb1a1ae8c",
+        "android_client_info": {
+          "package_name": "com.roboserve.robo_serve_mobil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChuJFRKD_bFRFw-3yxDwHr7FQp05k93Sg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104787327077:android:c512aced40867298a1ae8c",
+        "android_client_info": {
+          "package_name": "com.roboserve.robo_serve_mobil_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChuJFRKD_bFRFw-3yxDwHr7FQp05k93Sg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
