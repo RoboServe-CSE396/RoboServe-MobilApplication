@@ -13,11 +13,14 @@ void main() async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  /*
   ProductController productController = ProductController();
+  productController.fetchOrderedProducts(1);
+   */
   FirebaseExample firebaseExample = FirebaseExample();
 
   firebaseExample.createProductCollection();
-  productController.fetchOrderedProducts(1);
+
   runApp(OrderingApp());
 }
 
