@@ -35,8 +35,7 @@ class ProductController extends AbstractController{
   Future<List<Product>> fetchFoodItems() async {
     List<Product> foodItems = [];
     try {
-      QuerySnapshot<Map<String, dynamic>> querySnapshot =
-      await FirebaseFirestore.instance.collection('Products').get();
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('Products').get();
 
       querySnapshot.docs.forEach((document) {
         foodItems.add(Product.name(
