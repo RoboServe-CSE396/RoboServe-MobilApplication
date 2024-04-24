@@ -1,11 +1,12 @@
 // cart_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:robo_serve_mobil_app/Controllers/ProductController/ProductController.dart';
 
-import 'food_item.dart';
+import 'Entities/Product.dart';
 
 class CartPage extends StatelessWidget {
-  final List<FoodItem> selectedFoodItems;
+  final List<Product> selectedFoodItems;
 
   CartPage({required this.selectedFoodItems});
 

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:robo_serve_mobil_app/Controllers/ProductController/ProductController.dart';
+import 'package:robo_serve_mobil_app/Firebase/FirebaseExample.dart';
 
 import 'cart_page.dart';
-import 'food_item.dart';
+import 'Entities/Product.dart';
+
+void main() {
+  runApp(MainPage());
+}
 
 class MainPage extends StatefulWidget {
   @override
@@ -9,14 +15,21 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  List<FoodItem> foodItems = [
-    FoodItem('Pizza', 'assets/images/kebap.jpg', 10.0),
-    FoodItem('Burger', 'assets/images/kebap.jpg', 8.0),
-    FoodItem('Pasta', 'assets/images/kebap.jpg', 12.0),
-    // Add more food items as needed
-  ];
+  List<Product> foodItems = <Product>[];
+  List<Product> selectedFoodItems = [];
 
-  List<FoodItem> selectedFoodItems = [];
+  @override
+  void initState() {
+    super.initState();
+    fetchFoodItems();
+  }
+
+  void fetchFoodItems() async {
+    // Firebase'den yiyecek ve içecek verilerini çek
+    ProductController productController = ProductController();
+    foodItems = await productController.fetchFoodItems();
+    setState(() {}); // State'i güncelle
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +37,9 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: Text('Main Page'),
       ),
-      body: GridView.builder(
+      body: foodItems.isEmpty // Veriler henüz yüklenmediyse
+          ? Center(child: CircularProgressIndicator()) // Yükleme göstergesi göster
+          : GridView.builder(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 10.0,
@@ -49,12 +64,6 @@ class _MainPageState extends State<MainPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  Expanded(
-                    child: Image.asset(
-                      foodItems[index].imagePath,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
                   Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Column(
