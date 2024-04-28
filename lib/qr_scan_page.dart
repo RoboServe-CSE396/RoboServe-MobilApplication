@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class QRScanPage extends StatefulWidget {
   @override
@@ -7,41 +8,91 @@ class QRScanPage extends StatefulWidget {
 }
 
 class _QRScanPageState extends State<QRScanPage> {
-  late QRViewController controller;
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+  GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+  QRViewController? qrController;
+  bool isQRScanned = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('QR Code Scanner'),
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            flex: 4,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-            ),
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Welcome'),
+          automaticallyImplyLeading: false,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Welcome to Our Restaurant',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 20),
+              isQRScanned
+                  ? Text(
+                      'QR Code Scanned',
+                      style: TextStyle(fontSize: 18),
+                    )
+                  : ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          isQRScanned = true;
+                        });
+                      },
+                      child: Text(
+                        'Scan QR Code',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+              isQRScanned
+                  ? Expanded(
+                      flex: 4,
+                      child: QRView(
+                        key: qrKey,
+                        onQRViewCreated: _onQRViewCreated,
+                      ),
+                    )
+                  : Container(),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      // Process the scanned QR code data (e.g., create a session)
-      // Navigate to the main page with the necessary information
-      Navigator.pushReplacementNamed(context, '/main', arguments: scanData);
+    qrController = controller;
+    controller.scannedDataStream.listen((scanData) async {
+      if (scanData.code != null) {
+        if (await canLaunch(scanData.code!)) {
+          await launch(scanData.code!);
+        } else {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Invalid QR Code'),
+                content: Text('The QR code you scanned is not valid.'),
+              );
+            },
+          );
+        }
+      }
+      controller.pauseCamera();
+      setState(() {
+        isQRScanned = true;
+      });
     });
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    qrController?.dispose();
     super.dispose();
   }
 }
