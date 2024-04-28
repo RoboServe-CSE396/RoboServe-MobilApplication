@@ -29,7 +29,7 @@ class OrderingApp extends StatelessWidget {
     return MaterialApp(
       title: 'Ordering App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.blue, //color blue
       ),
       initialRoute: '/qr_scan', // Set the initial route to 'qr_scan'
       routes: {
