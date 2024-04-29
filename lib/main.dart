@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:robo_serve_mobil_app/Controllers/ProductController/ProductController.dart';
 import 'package:robo_serve_mobil_app/Firebase/FirebaseExample.dart';
 import 'package:robo_serve_mobil_app/Firebase/firebase_options.dart';
 
@@ -12,14 +13,13 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  /*
   ProductController productController = ProductController();
-  productController.fetchOrderedProducts(1);
-   */
+  productController.addPersonToDatabase("ahmet", 35);
+  productController.fetch();
+  /*
   FirebaseExample firebaseExample = FirebaseExample();
-
   firebaseExample.createProductCollection();
-
+   */
   runApp(OrderingApp());
 }
 
@@ -31,7 +31,7 @@ class OrderingApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue, //color blue
       ),
-      initialRoute: '/qr_scan', // Set the initial route to 'qr_scan'
+      initialRoute: '/', // Set the initial route to 'qr_scan'
       routes: {
         '/': (context) => MainPage(), // Define the main page route
         '/cart': (context) => CartPage(

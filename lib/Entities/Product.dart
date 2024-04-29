@@ -4,7 +4,7 @@ class Product {
   late final int _tableNumber;
   late final String _name;
   late final double _price;
-  late final String _imagePath = "assets/images/" + _name + ".jpg";
+  late final String _imagePath = "assets/images/" + _name + ".png";
 
 
 

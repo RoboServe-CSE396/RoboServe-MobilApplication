@@ -1,9 +1,36 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:robo_serve_mobil_app/Controllers/Abstract/AbstractController.dart';
 import 'package:robo_serve_mobil_app/Entities/Product.dart';
 
 class ProductController extends AbstractController{
   List<Product> products = [];
+
+  void addPersonToDatabase(String name, int age) {
+    DatabaseReference peopleRef =
+    FirebaseDatabase.instance.reference().child('Orders');
+    List<String> orderList = ["su","tatli","kebap"];
+    Map<String, dynamic> personMap = {
+      'OrderID': 2,
+      'OrderList': orderList,
+      'Price' : 200,
+      'FromWhichTable' : 'Table1',
+      'OrderStatus' : 'Ordered',
+    };
+    peopleRef.push().set(personMap);
+  }
+
+  void fetch(){
+    DatabaseReference starCountRef =
+    FirebaseDatabase.instance.ref('Orders');
+    starCountRef.onValue.listen((DatabaseEvent event) {
+      final data = event.snapshot.value;
+      print("VALUES:");
+      print(data.toString());
+    });
+
+
+  }
 
 
   Future<void> fetchOrderedProducts(int tableNumber) async{
@@ -35,7 +62,7 @@ class ProductController extends AbstractController{
   Future<List<Product>> fetchFoodItems() async {
     List<Product> foodItems = [];
     try {
-      QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('Products').get();
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('Foods').get();
 
       querySnapshot.docs.forEach((document) {
         foodItems.add(Product.name(
@@ -51,7 +78,27 @@ class ProductController extends AbstractController{
     }
   }
 
+  Future<List<Product>> fetchDrinkItems() async {
+    List<Product> drinkItems = [];
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('Drinks').get();
+
+      querySnapshot.docs.forEach((document) {
+        drinkItems.add(Product.name(
+            document['name'],
+            document['price'].toDouble()
+        ));
+      });
+
+      return drinkItems;
+    } catch (e) {
+      print('Error fetching food items: $e');
+      return drinkItems;
+    }
+  }
+
   List<Product> getProducts(){
       return this.products;
   }
+
 }
