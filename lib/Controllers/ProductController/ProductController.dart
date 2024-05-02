@@ -54,6 +54,15 @@ class ProductController extends AbstractController{
       'timestamp' : Timestamp.now(),
       'OrderList' : orderList,
     });
+    await FirebaseFirestore.instance.collection("currentlyProcessedOrder")
+        .add({
+      'OrderID' : 123,
+      'fromWhichTable' : table ,
+      'Price' : sum,
+      'orderStatus' : "Waiting",
+      'timestamp' : Timestamp.now(),
+      'OrderList' : orderList,
+    });
   }
 
 
