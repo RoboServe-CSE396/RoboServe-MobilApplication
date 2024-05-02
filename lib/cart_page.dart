@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:robo_serve_mobil_app/Controllers/ProductController/ProductController.dart';
+import 'package:robo_serve_mobil_app/OrderedProductPage.dart';
+import 'package:robo_serve_mobil_app/main_page.dart';
 import 'package:robo_serve_mobil_app/qr_scan_page.dart';
 
 import 'Entities/Product.dart';
 
 class CartPage extends StatefulWidget {
   final List<Product> selectedFoodItems;
-
-  CartPage({required this.selectedFoodItems});
+  final String table;
+  CartPage({required this.selectedFoodItems, required this.table});
 
   @override
   _CartPageState createState() => _CartPageState();
@@ -22,11 +25,13 @@ class _CartPageState extends State<CartPage> {
       },
     );
     Widget continueButton = TextButton(
-      child: Text("Replace Order"),
+      child: Text("Confirm"),
       onPressed: () {
+        Navigator.pop(context);
+        ProductController().order(widget.selectedFoodItems, widget.table);
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => QRScanPage()),
+          MaterialPageRoute(builder: (context) => OrderedProductPage(selectedFoodItems: widget.selectedFoodItems, table: widget.table,)),
         );
       },
     );

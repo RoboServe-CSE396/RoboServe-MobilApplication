@@ -6,9 +6,10 @@ import 'package:robo_serve_mobil_app/Entities/Product.dart';
 class ProductController extends AbstractController{
   List<Product> products = [];
 
+/*
   void addPersonToDatabase(String name, int age) {
     DatabaseReference peopleRef =
-    FirebaseDatabase.instance.reference().child('Orders');
+    FirebaseDatabase.instance.reference().child('orders');
     List<String> orderList = ["su","tatli","kebap"];
     Map<String, dynamic> personMap = {
       'OrderID': 2,
@@ -31,10 +32,28 @@ class ProductController extends AbstractController{
 
 
   }
+ */
 
+  Future<void> order(List<Product> products, String? table) async{
+    double sum = 0.0;
+    List<String> orderList = [];
+    for(Product product in products){
+      sum += product.price;
+      orderList.add(product.name);
+    }
+    await FirebaseFirestore.instance.collection("orders")
+        .add({
+      'OrderID' : 123,
+      'fromWhichTable' : table ,
+      'Price' : sum,
+      'orderStatus' : "Waiting",
+      'timestamp' : Timestamp.now(),
+      'OrderList' : orderList,
+    });
+  }
 
-  Future<void> fetchOrderedProducts(int tableNumber) async{
-    this.querySnapshot = await FirebaseFirestore.instance.collection('Orders')
+  Future<void> fetchOrderedProducts(String tableNumber) async{
+    this.querySnapshot = await FirebaseFirestore.instance.collection('orders')
         .where('status', isEqualTo: "Ordered")
         .where('tableNumber', isEqualTo: tableNumber)
         .get();
@@ -48,7 +67,7 @@ class ProductController extends AbstractController{
         for (int i = 0; i < orders.length; i++) {
           var order = orders[i];
           var orderPrice = orderPrices[i];
-          products.add(new Product(tableNumber, order, orderPrice));
+          products.add(new Product(order, orderPrice));
           // order ve orderPrice ile istediğiniz işlemi yapabilirsiniz
           print('Order: $order, Price: $orderPrice');
         }

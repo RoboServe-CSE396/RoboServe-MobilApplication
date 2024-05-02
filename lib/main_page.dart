@@ -5,6 +5,11 @@ import 'Entities/Product.dart';
 import 'cart_page.dart';
 
 class MainPage extends StatefulWidget {
+
+  late String table;
+
+  MainPage({required this.table});
+
   @override
   _MainPageState createState() => _MainPageState();
 }
@@ -214,7 +219,7 @@ class _MainPageState extends State<MainPage> {
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    CartPage(selectedFoodItems: selectedFoodItems),
+                    CartPage(selectedFoodItems: selectedFoodItems, table: widget.table),
               ),
             );
           },

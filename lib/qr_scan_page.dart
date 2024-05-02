@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:robo_serve_mobil_app/main_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class QRScanPage extends StatefulWidget {
@@ -69,15 +70,35 @@ class _QRScanPageState extends State<QRScanPage> {
     qrController = controller;
     controller.scannedDataStream.listen((scanData) async {
       if (scanData.code != null) {
-        if (await canLaunch(scanData.code!)) {
-          await launch(scanData.code!);
-        } else {
+        if(scanData.code == 'Table1' || scanData.code == 'Table2' ||
+            scanData.code == 'Table3' || scanData.code == 'Table4' || scanData.code == 'Table5'){
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  MainPage(table: scanData.code.toString()),
+            ),
+          );
+        }else {
           showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
                 title: Text('Invalid QR Code'),
                 content: Text('The QR code you scanned is not valid.'),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the dialog
+                      Navigator.of(context).pushReplacement( // Refresh the page
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => QRScanPage(), // Replace YourPage with the name of your page
+                        ),
+                      );
+                    },
+                  ),
+                ],
               );
             },
           );

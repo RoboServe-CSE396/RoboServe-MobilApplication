@@ -1,7 +1,6 @@
 // Product.dart
 
 class Product {
-  late final int _tableNumber;
   late final String _name;
   late final double _price;
   late final String _imagePath = "assets/images/" + _name + ".png";
@@ -11,7 +10,7 @@ class Product {
   Product.name(this._name, this._price); // burdaki name simplify edilcek.
 
   Product(
-      this._tableNumber, this._name, this._price);
+      this._name, this._price);
 
   String get imagePath => _imagePath;
 
@@ -27,9 +26,4 @@ class Product {
     this._name = value;
   }
 
-  int get tableNumber => _tableNumber;
-
-  set tableNumber(final int value) {
-    _tableNumber = value;
-  }
 }

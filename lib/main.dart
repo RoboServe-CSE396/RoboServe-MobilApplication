@@ -14,8 +14,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   ProductController productController = ProductController();
-  productController.addPersonToDatabase("ahmet", 35);
-  productController.fetch();
   /*
   FirebaseExample firebaseExample = FirebaseExample();
   firebaseExample.createProductCollection();
@@ -33,11 +31,7 @@ class OrderingApp extends StatelessWidget {
       ),
       initialRoute: '/', // Set the initial route to 'qr_scan'
       routes: {
-        '/': (context) => MainPage(), // Define the main page route
-        '/cart': (context) => CartPage(
-            selectedFoodItems: []), // Define the cart page route with an empty list
-        '/qr_scan': (context) =>
-            QRScanPage(), //Qr scanner page also welcoming page
+        '/': (context) => QRScanPage(), // Define the main page route
       },
     );
   }
