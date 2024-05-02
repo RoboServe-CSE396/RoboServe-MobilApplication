@@ -76,7 +76,7 @@ class _QRScanPageState extends State<QRScanPage> {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  MainPage(table: scanData.code.toString()),
+                  MainPage(table: scanData.code.toString().toLowerCase()),
             ),
           );
         }else {

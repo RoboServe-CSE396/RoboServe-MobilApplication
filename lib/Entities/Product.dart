@@ -3,6 +3,7 @@
 class Product {
   late final String _name;
   late final double _price;
+  int quantity = 1;
   late final String _imagePath = "assets/images/" + _name + ".png";
 
 

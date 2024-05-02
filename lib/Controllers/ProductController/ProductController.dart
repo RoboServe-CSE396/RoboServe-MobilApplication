@@ -37,10 +37,14 @@ class ProductController extends AbstractController{
   Future<void> order(List<Product> products, String? table) async{
     double sum = 0.0;
     List<String> orderList = [];
+
     for(Product product in products){
-      sum += product.price;
-      orderList.add(product.name);
+      sum += product.price * product.quantity; // Ürün miktarı ile çarpılıyor
+      for (int i = 0; i < product.quantity; i++) {
+        orderList.add(product.name); // Ürün adı miktar kadar ekleniyor
+      }
     }
+
     await FirebaseFirestore.instance.collection("orders")
         .add({
       'OrderID' : 123,
@@ -51,6 +55,8 @@ class ProductController extends AbstractController{
       'OrderList' : orderList,
     });
   }
+
+
 
   Future<void> fetchOrderedProducts(String tableNumber) async{
     this.querySnapshot = await FirebaseFirestore.instance.collection('orders')

@@ -55,16 +55,10 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  // calculates totalPayment before buying.
-  late double totalPayment =
-      widget.selectedFoodItems.fold(0, (sum, item) => sum + item.price);
-
   // removes items from cart
   void removeItem(Product item) {
     setState(() {
       widget.selectedFoodItems.remove(item);
-      totalPayment =
-          widget.selectedFoodItems.fold(0, (sum, item) => sum + item.price);
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -88,14 +82,12 @@ class _CartPageState extends State<CartPage> {
   void buyItems() {
     setState(() {
       showAlertDialog(context);
-      /*SnackBar(
-        content: Text("Enjoy your meal"),
-      );*/
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    double totalPayment = widget.selectedFoodItems.fold(0, (sum, item) => sum + (item.price * item.quantity));
     return Scaffold(
       backgroundColor: Colors.purple[50],
       appBar: AppBar(
@@ -137,11 +129,31 @@ class _CartPageState extends State<CartPage> {
                       Text('\$${foodItem.price.toStringAsFixed(2)}'),
                     ],
                   ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.remove_circle),
-                    onPressed: () {
-                      removeItem(foodItem);
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.remove),
+                        onPressed: () {
+                          setState(() {
+                            if (foodItem.quantity > 1) {
+                              foodItem.quantity--;
+                            } else {
+                              removeItem(foodItem);
+                            }
+                          });
+                        },
+                      ),
+                      Text(foodItem.quantity.toString()),
+                      IconButton(
+                        icon: Icon(Icons.add),
+                        onPressed: () {
+                          setState(() {
+                            foodItem.quantity++;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),

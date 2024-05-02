@@ -22,10 +22,7 @@ class _OrderedProductPageState extends State<OrderedProductPage> {
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('orders')
-            .where('fromWhichTable',
-            whereIn: widget.selectedFoodItems
-                .map((item) => widget.table)
-                .toList())
+            .where('fromWhichTable', isEqualTo: widget.table)
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (!snapshot.hasData) {
@@ -36,6 +33,15 @@ class _OrderedProductPageState extends State<OrderedProductPage> {
 
           return ListView(
             children: snapshot.data!.docs.map((document) {
+              List<dynamic> orderList = document['OrderList'];
+              Map<String, int> itemCountMap = {};
+              orderList.forEach((item) {
+                if (itemCountMap.containsKey(item)) {
+                  itemCountMap[item] = itemCountMap[item]! + 1;
+                } else {
+                  itemCountMap[item] = 1;
+                }
+              });
               return Card(
                 child: ListTile(
                   title: Text('Order ID: ${document['OrderID']}'),
@@ -52,9 +58,9 @@ class _OrderedProductPageState extends State<OrderedProductPage> {
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: widget.selectedFoodItems.map((item) {
+                        children: itemCountMap.entries.map((entry) {
                           return Text(
-                            '- ${item.name} - \$${item.price.toStringAsFixed(2)}',
+                            '- ${entry.key} x${entry.value}',
                           );
                         }).toList(),
                       ),
