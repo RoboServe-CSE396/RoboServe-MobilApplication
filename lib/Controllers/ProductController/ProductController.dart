@@ -101,7 +101,6 @@ class ProductController extends AbstractController{
     List<Product> drinkItems = [];
     try {
       QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('Drinks').get();
-
       querySnapshot.docs.forEach((document) {
         drinkItems.add(Product.name(
             document['name'],
