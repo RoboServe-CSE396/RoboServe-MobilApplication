@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:robo_serve_mobil_app/Controllers/Abstract/AbstractController.dart';
@@ -34,36 +36,54 @@ class ProductController extends AbstractController{
   }
  */
 
-  Future<void> order(List<Product> products, String? table) async{
+  Future<void> order(List<Product> products, String? table) async {
     double sum = 0.0;
     List<String> orderList = [];
+    bool orderIdExists = true;
+    int orderId = 0;
 
-    for(Product product in products){
+    // Rastgele benzersiz bir OrderID oluştur
+    while (orderIdExists) {
+      orderId = Random().nextInt(999999); // 0 ile 999999 arasında rastgele bir sayı üret
+      orderIdExists = await checkOrderId(orderId); // Oluşturulan ID daha önce kullanılmış mı diye kontrol et
+    }
+
+    for (Product product in products) {
       sum += product.price * product.quantity; // Ürün miktarı ile çarpılıyor
       for (int i = 0; i < product.quantity; i++) {
         orderList.add(product.name); // Ürün adı miktar kadar ekleniyor
       }
     }
 
-    await FirebaseFirestore.instance.collection("orders")
-        .add({
-      'OrderID' : 123,
-      'fromWhichTable' : table ,
-      'Price' : sum,
-      'orderStatus' : "Waiting",
-      'timestamp' : Timestamp.now(),
-      'OrderList' : orderList,
+    await FirebaseFirestore.instance.collection("orders").add({
+      'OrderID': orderId,
+      'fromWhichTable': table,
+      'Price': sum,
+      'orderStatus': "Waiting",
+      'timestamp': Timestamp.now(),
+      'OrderList': orderList,
     });
-    await FirebaseFirestore.instance.collection("currentlyProcessedOrder")
-        .add({
-      'OrderID' : 123,
-      'fromWhichTable' : table ,
-      'Price' : sum,
-      'orderStatus' : "Waiting",
-      'timestamp' : Timestamp.now(),
-      'OrderList' : orderList,
+
+    await FirebaseFirestore.instance.collection("currentlyProcessedOrder").add({
+      'OrderID': orderId,
+      'fromWhichTable': table,
+      'Price': sum,
+      'orderStatus': "Waiting",
+      'timestamp': Timestamp.now(),
+      'OrderList': orderList,
     });
   }
+
+  Future<bool> checkOrderId(int orderId) async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+        .collection("orders")
+        .where("OrderID", isEqualTo: orderId)
+        .limit(1)
+        .get();
+
+    return querySnapshot.docs.isNotEmpty;
+  }
+
 
 
 

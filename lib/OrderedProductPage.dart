@@ -30,7 +30,6 @@ class _OrderedProductPageState extends State<OrderedProductPage> {
               child: CircularProgressIndicator(),
             );
           }
-
           return ListView(
             children: snapshot.data!.docs.map((document) {
               if (document['orderStatus'] != 'Delivered') {
