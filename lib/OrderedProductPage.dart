@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'Entities/Product.dart';
 
 class OrderedProductPage extends StatefulWidget {
@@ -20,18 +20,23 @@ class _OrderedProductPageState extends State<OrderedProductPage> {
         title: Text('Ordered Products'),
       ),
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('currentlyProcessedOrder')
-            .where('fromWhichTable', isEqualTo: widget.table)
-            .snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (!snapshot.hasData) {
+        stream: FirebaseDatabase.instance
+            .ref('currentlyProcessedOrder')
+            .orderByChild('fromWhichTable')
+            .equalTo(widget.table)
+            .onValue,
+        builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+          if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
             return Center(
               child: CircularProgressIndicator(),
             );
           }
+
+          Map<dynamic, dynamic> ordersMap = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+          List<dynamic> documents = ordersMap.values.toList();
+
           return ListView(
-            children: snapshot.data!.docs.map((document) {
+            children: documents.map((document) {
               if (document['orderStatus'] != 'Delivered') {
                 List<dynamic> orderList = document['OrderList'];
                 Map<String, int> itemCountMap = {};
@@ -68,40 +73,38 @@ class _OrderedProductPageState extends State<OrderedProductPage> {
                     ),
                     trailing: document['orderStatus'] == 'Arrived'
                         ? IconButton(
-                      icon: Icon(Icons.check),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text("Order Received?"),
-                              content: Text(
-                                  "Have you received the order?"),
-                              actions: [
-                                TextButton(
-                                  child: Text("No"),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                                TextButton(
-                                  child: Text("Yes"),
-                                  onPressed: () {
-                                    // Mark order as received
-                                    markOrderAsReceived(
-                                        document.id);
-                                    Navigator.of(context).pop();
-                                    // Close the app
-                                    Navigator.of(context)
-                                        .popUntil((route) => route.isFirst);
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    )
+                            icon: Icon(Icons.check),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text("Order Received?"),
+                                    content: Text("Have you received the order?"),
+                                    actions: [
+                                      TextButton(
+                                        child: Text("No"),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: Text("Yes"),
+                                        onPressed: () {
+                                          // Mark order as received
+                                          markOrderAsReceived(document['OrderID']);
+                                          Navigator.of(context).pop();
+                                          // Close the app
+                                          Navigator.of(context)
+                                              .popUntil((route) => route.isFirst);
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          )
                         : null,
                   ),
                 );
@@ -116,9 +119,9 @@ class _OrderedProductPageState extends State<OrderedProductPage> {
   }
 
   void markOrderAsReceived(String orderId) {
-    FirebaseFirestore.instance
-        .collection('currentlyProcessedOrder')
-        .doc(orderId)
-        .update({'orderStatus': 'Delivered'});
+    DatabaseReference orderRef = FirebaseDatabase.instance
+        .ref('currentlyProcessedOrder')
+        .child(orderId);
+    orderRef.update({'orderStatus': 'Delivered'});
   }
 }

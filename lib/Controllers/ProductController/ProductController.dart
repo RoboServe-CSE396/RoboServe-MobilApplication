@@ -1,40 +1,11 @@
 import 'dart:math';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:robo_serve_mobil_app/Controllers/Abstract/AbstractController.dart';
 import 'package:robo_serve_mobil_app/Entities/Product.dart';
 
-class ProductController extends AbstractController{
+class ProductController extends AbstractController {
   List<Product> products = [];
-
-/*
-  void addPersonToDatabase(String name, int age) {
-    DatabaseReference peopleRef =
-    FirebaseDatabase.instance.reference().child('orders');
-    List<String> orderList = ["su","tatli","kebap"];
-    Map<String, dynamic> personMap = {
-      'OrderID': 2,
-      'OrderList': orderList,
-      'Price' : 200,
-      'FromWhichTable' : 'Table1',
-      'OrderStatus' : 'Ordered',
-    };
-    peopleRef.push().set(personMap);
-  }
-
-  void fetch(){
-    DatabaseReference starCountRef =
-    FirebaseDatabase.instance.ref('Orders');
-    starCountRef.onValue.listen((DatabaseEvent event) {
-      final data = event.snapshot.value;
-      print("VALUES:");
-      print(data.toString());
-    });
-
-
-  }
- */
 
   Future<void> order(List<Product> products, String? table) async {
     double sum = 0.0;
@@ -55,58 +26,55 @@ class ProductController extends AbstractController{
       }
     }
 
-    await FirebaseFirestore.instance.collection("orders").add({
+    DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("orders").push();
+    await ordersRef.set({
       'OrderID': orderId,
       'fromWhichTable': table,
       'Price': sum,
       'orderStatus': "Waiting",
-      'timestamp': Timestamp.now(),
+      'timestamp': ServerValue.timestamp,
       'OrderList': orderList,
     });
 
-    await FirebaseFirestore.instance.collection("currentlyProcessedOrder").add({
+    DatabaseReference currentlyProcessedOrderRef = FirebaseDatabase.instance.ref().child("currentlyProcessedOrder").push();
+    await currentlyProcessedOrderRef.set({
       'OrderID': orderId,
       'fromWhichTable': table,
       'Price': sum,
       'orderStatus': "Waiting",
-      'timestamp': Timestamp.now(),
+      'timestamp': ServerValue.timestamp,
       'OrderList': orderList,
     });
   }
 
   Future<bool> checkOrderId(int orderId) async {
-    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
-        .collection("orders")
-        .where("OrderID", isEqualTo: orderId)
-        .limit(1)
-        .get();
+    DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child("orders");
+    DataSnapshot snapshot = await ordersRef.orderByChild("OrderID").equalTo(orderId).limitToFirst(1).get();
 
-    return querySnapshot.docs.isNotEmpty;
+    return snapshot.exists;
   }
 
+  Future<void> fetchOrderedProducts(String tableNumber) async {
+    DatabaseReference ordersRef = FirebaseDatabase.instance.ref().child('orders');
+    DataSnapshot snapshot = await ordersRef.orderByChild('status').equalTo("Ordered").once();
 
+    products.clear();
+    if (snapshot.exists) {
+      Map<dynamic, dynamic> ordersMap = snapshot.value as Map<dynamic, dynamic>;
+      ordersMap.forEach((key, value) {
+        if (value['tableNumber'] == tableNumber) {
+          List<dynamic> orders = value['ordered_items'];
+          List<dynamic> orderPrices = value['ordered_item_prices'];
 
-
-  Future<void> fetchOrderedProducts(String tableNumber) async{
-    this.querySnapshot = await FirebaseFirestore.instance.collection('orders')
-        .where('status', isEqualTo: "Ordered")
-        .where('tableNumber', isEqualTo: tableNumber)
-        .get();
-
-    for (var documentSnapshot in this.querySnapshot.docs) {
-      if (documentSnapshot.exists) {
-        var data = documentSnapshot.data() as Map<String, dynamic>;
-        List<dynamic> orders = data['ordered_items'];
-        List<dynamic> orderPrices = data['ordered_item_prices'];
-
-        for (int i = 0; i < orders.length; i++) {
-          var order = orders[i];
-          var orderPrice = orderPrices[i];
-          products.add(new Product(order, orderPrice));
-          // order ve orderPrice ile istediğiniz işlemi yapabilirsiniz
-          print('Order: $order, Price: $orderPrice');
+          for (int i = 0; i < orders.length; i++) {
+            var order = orders[i];
+            var orderPrice = orderPrices[i];
+            products.add(Product(order, orderPrice));
+            // order ve orderPrice ile istediğiniz işlemi yapabilirsiniz
+            print('Order: $order, Price: $orderPrice');
+          }
         }
-      }
+      });
     }
     print("ORDERS2: ");
     print(this.products);
@@ -116,14 +84,18 @@ class ProductController extends AbstractController{
   Future<List<Product>> fetchFoodItems() async {
     List<Product> foodItems = [];
     try {
-      QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('Foods').get();
+      DatabaseReference foodsRef = FirebaseDatabase.instance.ref().child('Foods');
+      DataSnapshot snapshot = await foodsRef.once();
 
-      querySnapshot.docs.forEach((document) {
-        foodItems.add(Product.name(
-          document['name'],
-          document['price'].toDouble()
-        ));
-      });
+      if (snapshot.exists) {
+        Map<dynamic, dynamic> foodsMap = snapshot.value as Map<dynamic, dynamic>;
+        foodsMap.forEach((key, value) {
+          foodItems.add(Product.name(
+            value['name'],
+            value['price'].toDouble(),
+          ));
+        });
+      }
 
       return foodItems;
     } catch (e) {
@@ -135,23 +107,27 @@ class ProductController extends AbstractController{
   Future<List<Product>> fetchDrinkItems() async {
     List<Product> drinkItems = [];
     try {
-      QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('Drinks').get();
-      querySnapshot.docs.forEach((document) {
-        drinkItems.add(Product.name(
-            document['name'],
-            document['price'].toDouble()
-        ));
-      });
+      DatabaseReference drinksRef = FirebaseDatabase.instance.ref().child('Drinks');
+      DataSnapshot snapshot = await drinksRef.once();
+
+      if (snapshot.exists) {
+        Map<dynamic, dynamic> drinksMap = snapshot.value as Map<dynamic, dynamic>;
+        drinksMap.forEach((key, value) {
+          drinkItems.add(Product.name(
+            value['name'],
+            value['price'].toDouble(),
+          ));
+        });
+      }
 
       return drinkItems;
     } catch (e) {
-      print('Error fetching food items: $e');
+      print('Error fetching drink items: $e');
       return drinkItems;
     }
   }
 
-  List<Product> getProducts(){
-      return this.products;
+  List<Product> getProducts() {
+    return this.products;
   }
-
 }
