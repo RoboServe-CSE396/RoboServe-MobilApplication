@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:robo_serve_mobil_app/Controllers/Abstract/AbstractController.dart';
@@ -8,111 +7,91 @@ import 'package:robo_serve_mobil_app/Entities/Product.dart';
 class ProductController extends AbstractController{
   List<Product> products = [];
 
-/*
-  void addPersonToDatabase(String name, int age) {
-    DatabaseReference peopleRef =
-    FirebaseDatabase.instance.reference().child('orders');
-    List<String> orderList = ["su","tatli","kebap"];
-    Map<String, dynamic> personMap = {
-      'OrderID': 2,
-      'OrderList': orderList,
-      'Price' : 200,
-      'FromWhichTable' : 'Table1',
-      'OrderStatus' : 'Ordered',
-    };
-    peopleRef.push().set(personMap);
-  }
-
-  void fetch(){
-    DatabaseReference starCountRef =
-    FirebaseDatabase.instance.ref('Orders');
-    starCountRef.onValue.listen((DatabaseEvent event) {
-      final data = event.snapshot.value;
-      print("VALUES:");
-      print(data.toString());
-    });
-
-
-  }
- */
-
   Future<void> order(List<Product> products, String? table) async {
     double sum = 0.0;
     List<String> orderList = [];
     bool orderIdExists = true;
     int orderId = 0;
 
-    // Rastgele benzersiz bir OrderID oluştur
+    // Generate a unique OrderID
     while (orderIdExists) {
-      orderId = Random().nextInt(999999); // 0 ile 999999 arasında rastgele bir sayı üret
-      orderIdExists = await checkOrderId(orderId); // Oluşturulan ID daha önce kullanılmış mı diye kontrol et
+      orderId = Random().nextInt(999999); // Generate a random number between 0 and 999999
+      orderIdExists = await checkOrderId(orderId); // Check if the generated ID has been used before
     }
 
     for (Product product in products) {
-      sum += product.price * product.quantity; // Ürün miktarı ile çarpılıyor
+      sum += product.price * product.quantity; // Multiply product price by quantity
       for (int i = 0; i < product.quantity; i++) {
-        orderList.add(product.name); // Ürün adı miktar kadar ekleniyor
+        orderList.add(product.name); // Add product name to the list as many times as its quantity
       }
     }
 
-    await FirebaseFirestore.instance.collection("orders").add({
+    DatabaseReference ordersRef = FirebaseDatabase.instance.reference().child("orders").push();
+    await ordersRef.set({
       'OrderID': orderId,
       'fromWhichTable': table,
       'Price': sum,
       'orderStatus': "Waiting",
-      'timestamp': Timestamp.now(),
+      'timestamp': ServerValue.timestamp,
       'OrderList': orderList,
     });
 
-    await FirebaseFirestore.instance.collection("currentlyProcessedOrder").add({
+    DatabaseReference currentlyProcessedOrderRef = FirebaseDatabase.instance.reference().child("currentlyProcessedOrder").push();
+    await currentlyProcessedOrderRef.set({
       'OrderID': orderId,
       'fromWhichTable': table,
       'Price': sum,
       'orderStatus': "Waiting",
-      'timestamp': Timestamp.now(),
+      'timestamp': ServerValue.timestamp,
       'OrderList': orderList,
     });
   }
 
   Future<bool> checkOrderId(int orderId) async {
-    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
-        .collection("orders")
-        .where("OrderID", isEqualTo: orderId)
-        .limit(1)
-        .get();
+    DataSnapshot dataSnapshot = await FirebaseDatabase.instance.reference()
+        .child("orders")
+        .orderByChild("OrderID")
+        .equalTo(orderId)
+        .limitToFirst(1)
+        .once()
+        .then((event) => event.snapshot);
 
-    return querySnapshot.docs.isNotEmpty;
+    return dataSnapshot.exists;
   }
 
+  Future<void> fetchOrderedProducts(String tableNumber) async {
+    DataSnapshot dataSnapshot = await FirebaseDatabase.instance.reference()
+        .child('orders')
+        .orderByChild('tableNumber')
+        .equalTo(tableNumber)
+        .once()
+        .then((event) => event.snapshot);
 
+    products.clear(); // Clear the products list before fetching new data
 
+    Map<dynamic, dynamic>? ordersMap = dataSnapshot.value as Map<dynamic, dynamic>?;
+    if (ordersMap != null) {
+      ordersMap.forEach((key, value) {
+        if (value['status'] == "Ordered") {
+          List<dynamic> orders = value['ordered_items'];
+          List<dynamic> orderPrices = value['ordered_item_prices'];
 
-  Future<void> fetchOrderedProducts(String tableNumber) async{
-    this.querySnapshot = await FirebaseFirestore.instance.collection('orders')
-        .where('status', isEqualTo: "Ordered")
-        .where('tableNumber', isEqualTo: tableNumber)
-        .get();
-
-    for (var documentSnapshot in this.querySnapshot.docs) {
-      if (documentSnapshot.exists) {
-        var data = documentSnapshot.data() as Map<String, dynamic>;
-        List<dynamic> orders = data['ordered_items'];
-        List<dynamic> orderPrices = data['ordered_item_prices'];
-
-        for (int i = 0; i < orders.length; i++) {
-          var order = orders[i];
-          var orderPrice = orderPrices[i];
-          products.add(new Product(order, orderPrice));
-          // order ve orderPrice ile istediğiniz işlemi yapabilirsiniz
-          print('Order: $order, Price: $orderPrice');
+          for (int i = 0; i < orders.length; i++) {
+            var order = orders[i];
+            var orderPrice = orderPrices[i];
+            products.add(new Product(order, orderPrice));
+            // You can perform any desired operations with order and orderPrice here
+            print('Order: $order, Price: $orderPrice');
+          }
         }
-      }
+      });
     }
+
     print("ORDERS2: ");
     print(this.products);
   }
 
-  // Function to fetch food items from Firebase
+  // Fetch food items from Firestore (unchanged)
   Future<List<Product>> fetchFoodItems() async {
     List<Product> foodItems = [];
     try {
@@ -120,8 +99,8 @@ class ProductController extends AbstractController{
 
       querySnapshot.docs.forEach((document) {
         foodItems.add(Product.name(
-          document['name'],
-          document['price'].toDouble()
+            document['name'],
+            document['price'].toDouble()
         ));
       });
 
@@ -132,6 +111,7 @@ class ProductController extends AbstractController{
     }
   }
 
+  // Fetch drink items from Firestore (unchanged)
   Future<List<Product>> fetchDrinkItems() async {
     List<Product> drinkItems = [];
     try {
@@ -151,7 +131,6 @@ class ProductController extends AbstractController{
   }
 
   List<Product> getProducts(){
-      return this.products;
+    return this.products;
   }
-
 }
